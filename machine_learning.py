@@ -18,7 +18,6 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
-from xgboost import XGBClassifier, plot_importance
 
 from prepare_data import prepare_data
 
@@ -42,15 +41,6 @@ def test_models(filename):
         "GradientBoostingClassifier": GradientBoostingClassifier(),
         "Perceptron": Perceptron(max_iter=40, eta0=0.1, random_state=1),
         "MLP": MLPClassifier(),
-        "XGBClassifer tuned": XGBClassifier(colsample_bytree=0.8,
-                                            gamma=0.9,
-                                            max_depth=20,
-                                            min_child_weight=1,
-                                            scale_pos_weight=12,
-                                            subsample=0.9,
-                                            n_estimators=50,
-                                            learning_rate=0.1,
-                                            use_label_encoder=False),
         "LinearSVC": LinearSVC(max_iter=5000)
     }
 
@@ -89,20 +79,12 @@ def test_models(filename):
 def supervised_machine_learning(filename_learn, filename_test):
     X, y = prepare_data(filename_learn, print_corr=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=1, stratify=y)
-    model = XGBClassifier(colsample_bytree=0.8,
-                          gamma=0.9,
-                          max_depth=20,
-                          min_child_weight=1,
-                          scale_pos_weight=12,
-                          subsample=0.9,
-                          n_estimators=50,
-                          learning_rate=0.1,
-                          use_label_encoder=False)
+    model = GradientBoostingClassifier()
     model = model.fit(X_train, y_train)
-    ax = plot_importance(model)
-    fig = ax.figure
-    fig.set_size_inches(10, 3)
-    plt.show()
+    # ax = plot_importance(model)
+    # fig = ax.figure
+    # fig.set_size_inches(10, 3)
+    # plt.show()
     y_pred = model.predict(X_test)
     print("\nroc_auc_score:")
     print(roc_auc_score(y_test, y_pred))
@@ -122,8 +104,8 @@ def unsupervised_machine_learning(filename_learn, filename_test):
     X, y = prepare_data(filename_learn, print_corr=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=1, stratify=y)
     model = KMeans(n_clusters=2,
-                   max_iter=100,
-                   n_init=30)
+                   max_iter=1000,
+                   n_init=100)
     model.fit(X_train)
     y_pred = model.predict(X_test)
     print("\nPair confusion matrix for testing data:")
