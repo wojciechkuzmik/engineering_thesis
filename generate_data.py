@@ -38,5 +38,6 @@ print(f"Matching pairs count: {matching_count}")
 not_matching_count = len(df[df['label'] == 0])
 print(f"Not matching pairs count: {not_matching_count}")
 print(f"Matching/Not matching pairs ratio: {matching_count/not_matching_count}")
+print(df.loc[(df["first_brand"] != df["second_brand"]) & (df["label"] == 1)])
 df.to_csv("data/data.csv", index=False)
 
