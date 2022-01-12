@@ -1,80 +1,42 @@
-import numpy as np
 import pandas as pd
-
-df_original = pd.read_csv('data\pricerunner_aggregate.csv',
-                          names=['product_id', 'product_title', 'vendor_id', 'cluster_id',
-                                 'cluster_label', 'category_id', 'category_label'])
-print("total count:")
-print(len(df_original[df_original["category_label"] == "Mobile Phones"]))
-df_correct = df_original[['product_title', 'cluster_label', 'category_label']].copy()
-df_correct.rename(columns={'product_title': 'title',
-                           'cluster_label': 'label'}, inplace=True)
-
-df_correct['match'] = 1
-
-def create_synthetic_data(df, iterations):
-    df_output = df
-    i = 1
-    while i <= iterations:
-        df_s = df[['title', 'label', 'category_label']].copy()
-        df_s['shuffled_label'] = df_s['label']
-        df_s['shuffled_label'] = df_s.groupby('category_label')['label'].transform(np.random.permutation)
-
-        df_s['match'] = np.where(df_s['label'] == df_s['shuffled_label'], 1, 0)
-
-        df_s['label'] = np.where(df_s['shuffled_label'] != '',
-                                 df_s['shuffled_label'],
-                                 df_s['label'])
-
-        df_output = df_output.append(df_s)
-        df_output = df_output.drop(columns=['shuffled_label'])
-
-        i += 1
-
-    return df_output
+import numpy as np
 
 
-df_output = create_synthetic_data(df_correct, 4)
-df_output = df_output[df_output['category_label'] == 'Mobile Phones']
-df_output = df_output.drop(columns='category_label')
-print("matching pairs count:")
-print(len(df_output[df_output["match"] == 1]))
-print("not matching pairs count:")
-print(len(df_output[df_output["match"] == 0]))
-df_output.rename(columns={'title': 'first',
-                           'label': 'second'}, inplace=True)
-df_output.to_csv('data\learning_data.csv', index=False)
+def prepare_dataframes(df_info_filename):
+    df_left = pd.read_csv("data/tableA.csv", index_col=0)
+    df_right = pd.read_csv("data/tableB.csv", index_col=0)
+    df_info = pd.read_csv(df_info_filename)
+
+    df_left = df_left[["title", "brand", "price"]].loc[df_info["ltable_id"]]
+    df_right = df_right[["title", "brand", "price"]].loc[df_info["rtable_id"]]
+
+    df_left.rename(columns={'title': 'first_title',
+                            'brand': 'first_brand',
+                            'price': 'first_price'}, inplace=True)
+    df_right.rename(columns={'title': 'second_title',
+                             'brand': 'second_brand',
+                             'price': 'second_price'}, inplace=True)
+    df_left.reset_index(inplace=True)
+    df_right.reset_index(inplace=True)
+    new_df = pd.concat([df_left, df_right], axis=1)
+    new_df['label'] = df_info['label'].values
+    new_df.drop(columns="id", inplace=True)
+    return new_df
 
 
+df = pd.DataFrame(columns=["first_title", "first_brand", "first_price",
+                           "second_title", "second_brand", "second_price", "label"])
+df = df.append(prepare_dataframes("data/train.csv"))
+df = df.append(prepare_dataframes("data/test.csv"))
+df = df.append(prepare_dataframes("data/valid.csv"))
+df = df.dropna()
+print("Dataframe:")
+print(df.head(12))
+print(f"\n\nAll pairs count: {len(df)}")
+matching_count = len(df[df['label'] == 1])
+print(f"Matching pairs count: {matching_count}")
+not_matching_count = len(df[df['label'] == 0])
+print(f"Not matching pairs count: {not_matching_count}")
+print(f"Matching/Not matching pairs ratio: {matching_count/not_matching_count}")
+df.to_csv("data/data.csv", index=False)
 
-
-
-# def create_synthetic_data(df, iterations):
-#     df_output = df
-#
-#     i = 1
-#     while i <= iterations:
-#         df_s = df[['title', 'label', 'category_label']].copy()
-#         df_s['shuffled_label'] = df_s['label']
-#         df_s['shuffled_label'] = df_s.groupby('category_label')['label'].transform(np.random.permutation)
-#
-#         df_s['match'] = np.where(df_s['label'] == df_s['shuffled_label'], 1, 0)
-#
-#         df_s['label'] = np.where(df_s['shuffled_label'] != '',
-#                                  df_s['shuffled_label'],
-#                                  df_s['label'])
-#
-#         df_output = df_output.append(df_s)
-#         df_output = df_output.drop(columns=['shuffled_label'])
-#
-#         i += 1
-#
-#     return df_output
-#
-#
-# df_output = create_synthetic_data(df_correct, 5)
-# df_output = df_output[df_output['category_label'] == 'Mobile Phones']
-# df_output = df_output.drop(columns='category_label')
-# df_output.rename(columns={'title': 'first',
-#                            'label': 'second'}, inplace=True)
-# df_output.to_csv('data\learning_data.csv', index=False)

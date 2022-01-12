@@ -1,6 +1,9 @@
 from get_data import get_data
 from machine_learning import test_models, supervised_machine_learning, unsupervised_machine_learning
 
+default_learning_data_f = "data/data.csv"
+default_web_scraping_data_f = "data/web_scraping_data.csv"
+
 if __name__ == '__main__':
     while True:
         print("""Choose an option:
@@ -11,27 +14,30 @@ if __name__ == '__main__':
         0. exit """)
         option = input("Enter an option (only number): ")
         if option == "1":
-            get_data()
-        elif option == "2":
-            filename = input("filename: ")
+            filename = input("filename to store data (press enter to choose default filename): ")
             if not filename:
-                filename = "data/learning_data.csv"
+                filename = default_web_scraping_data_f
+            get_data(filename)
+        elif option == "2":
+            filename = input("filename with learning data (press enter to choose default filename): ")
+            if not filename:
+                filename = default_learning_data_f
             test_models(filename)
         elif option == "3":
-            filename1 = input("filename for learn: ")
-            filename2 = input("filename with web scraping data: ")
+            filename1 = input("filename with learning data (press enter to choose default filename): ")
+            filename2 = input("filename with web scraping data (press enter to choose default filename): ")
             if not filename1:
-                filename1 = "data/learning_data.csv"
+                filename1 = default_learning_data_f
             if not filename2:
-                filename2 = "data/web_scraping_data.csv"
+                filename2 = default_web_scraping_data_f
             supervised_machine_learning(filename1, filename2)
         elif option == "4":
-            filename1 = input("filename for learn: ")
-            filename2 = input("filename with web scraping data: ")
+            filename1 = input("filename with learning data (press enter to choose default filename): ")
+            filename2 = input("filename with web scraping data (press enter to choose default filename): ")
             if not filename1:
-                filename1 = "data/learning_data.csv"
+                filename1 = default_learning_data_f
             if not filename2:
-                filename2 = "data/web_scraping_data.csv"
+                filename2 = default_web_scraping_data_f
             unsupervised_machine_learning(filename1, filename2)
         elif option == "0":
             break

@@ -31,17 +31,16 @@ def test_models(filename):
 
     def get_confusion_matrix_values(y_test, y_pred):
         cm = confusion_matrix(y_test, y_pred)
-        return cm[0][0], cm[0][1], cm[1][0], cm[1][1]
+        return cm[1][1], cm[0][1], cm[1][0], cm[0][0]
 
     classifiers = {
-        "DummyClassifier_stratified": DummyClassifier(strategy='stratified', random_state=0),
-        "KNeighborsClassifier": KNeighborsClassifier(3),
+        "DummyClassifier_stratified": DummyClassifier(strategy='stratified'),
+        "KNeighborsClassifier": KNeighborsClassifier(),
         "DecisionTreeClassifier": DecisionTreeClassifier(),
         "RandomForestClassifier": RandomForestClassifier(),
         "GradientBoostingClassifier": GradientBoostingClassifier(),
-        "Perceptron": Perceptron(max_iter=40, eta0=0.1, random_state=1),
-        "MLP": MLPClassifier(),
-        "LinearSVC": LinearSVC(max_iter=5000)
+        "Perceptron": Perceptron(),
+        "MLP": MLPClassifier()
     }
 
     df_results = pd.DataFrame(columns=['model', 'accuracy', 'precision',
@@ -81,10 +80,6 @@ def supervised_machine_learning(filename_learn, filename_test):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=1, stratify=y)
     model = GradientBoostingClassifier()
     model = model.fit(X_train, y_train)
-    # ax = plot_importance(model)
-    # fig = ax.figure
-    # fig.set_size_inches(10, 3)
-    # plt.show()
     y_pred = model.predict(X_test)
     print("\nroc_auc_score:")
     print(roc_auc_score(y_test, y_pred))
@@ -95,7 +90,7 @@ def supervised_machine_learning(filename_learn, filename_test):
     web_scraping_data, _ = prepare_data(filename_test)
     web_scraping_pred = model.predict(web_scraping_data)
     web_scraping_df = pd.read_csv(filename_test)
-    web_scraping_df = web_scraping_df.drop(columns=["match"])
+    web_scraping_df = web_scraping_df.drop(columns=["label"])
     web_scraping_df["pred"] = web_scraping_pred
     print(web_scraping_df.to_string(index=False))
 
@@ -117,6 +112,6 @@ def unsupervised_machine_learning(filename_learn, filename_test):
     web_scraping_data, _ = prepare_data(filename_test)
     web_scraping_pred = model.predict(web_scraping_data)
     web_scraping_df = pd.read_csv(filename_test)
-    web_scraping_df = web_scraping_df.drop(columns=["match"])
+    web_scraping_df = web_scraping_df.drop(columns=["label"])
     web_scraping_df["pred"] = web_scraping_pred
     print(web_scraping_df.to_string(index=False))

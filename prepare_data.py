@@ -19,37 +19,54 @@ def prepare_data(filename, print_corr=False):
         else:
             return len(intersection) / len(union)
 
+    def price_similarity(first, second):
+        if float(first) > float(second):
+            return (float(first) - float(second)) / float(first)
+        else:
+            return (float(second) - float(first)) / float(second)
+
     def engineer_features(data_frame):
-        data_frame['first'] = data_frame['first'].str.lower()
-        data_frame['second'] = data_frame['second'].str.lower()
+        data_frame['first_title'] = data_frame['first_title'].str.lower()
+        data_frame['second_title'] = data_frame['second_title'].str.lower()
 
-        data_frame['ratio'] = data_frame.apply(
-            lambda x: fuzz.ratio(x['second'],
-                                 x['first']), axis=1)
+        data_frame['brand_ratio'] = data_frame.apply(
+            lambda x: fuzz.ratio(str(x['first_brand']),
+                                 str(x['second_brand'])), axis=1)
 
-        data_frame['partial_ratio'] = data_frame.apply(
-            lambda x: fuzz.partial_ratio(x['second'],
-                                         x['first']), axis=1)
+        data_frame['title_ratio'] = data_frame.apply(
+            lambda x: fuzz.ratio(x['second_title'],
+                                 x['first_title']), axis=1)
 
-        data_frame['token_sort_ratio'] = data_frame.apply(
-            lambda x: fuzz.token_sort_ratio(x['second'],
-                                            x['first']), axis=1)
+        data_frame['title_partial_ratio'] = data_frame.apply(
+            lambda x: fuzz.partial_ratio(x['second_title'],
+                                         x['first_title']), axis=1)
 
-        data_frame['token_set_ratio'] = data_frame.apply(
-            lambda x: fuzz.token_set_ratio(x['second'],
-                                           x['first']), axis=1)
+        data_frame['title_token_sort_ratio'] = data_frame.apply(
+            lambda x: fuzz.token_sort_ratio(x['second_title'],
+                                            x['first_title']), axis=1)
 
-        data_frame['matching_numbers'] = data_frame.apply(
-            lambda x: matching_numbers(x['second'],
-                                       x['first']), axis=1)
+        data_frame['title_token_set_ratio'] = data_frame.apply(
+            lambda x: fuzz.token_set_ratio(x['second_title'],
+                                           x['first_title']), axis=1)
 
-        data_frame['matching_numbers_log'] = (data_frame['matching_numbers'] + 1).apply(np.log)
+        data_frame['title_matching_numbers'] = data_frame.apply(
+            lambda x: matching_numbers(x['second_title'],
+                                       x['first_title']), axis=1)
 
-        data_frame['log_fuzz_score'] = (data_frame['ratio'] + data_frame['partial_ratio'] +
-                                        data_frame['token_sort_ratio'] + data_frame['token_set_ratio']).apply(np.log)
+        data_frame['title_matching_numbers_log'] = (data_frame['title_matching_numbers'] + 1).apply(np.log)
 
-        data_frame['log_fuzz_score_numbers'] = data_frame['log_fuzz_score'] + (data_frame['matching_numbers']).apply(
-            np.log)
+        data_frame['title_log_fuzz_score'] = (data_frame['title_ratio'] + data_frame['title_partial_ratio'] +
+                                              data_frame['title_token_sort_ratio'] +
+                                              data_frame['title_token_set_ratio']).apply(np.log)
+
+        data_frame['title_log_fuzz_score_numbers'] = data_frame['title_log_fuzz_score'] + (
+            data_frame['title_matching_numbers']).apply(np.log)
+
+        data_frame['price_similarity'] = data_frame.apply(
+            lambda x: price_similarity(x['first_price'],
+                                       x['second_price']), axis=1)
+
+        data_frame['price_similarity_log'] = (data_frame['price_similarity'] + 1).apply(np.log)
 
         data_frame.replace([np.inf, -np.inf], np.nan, inplace=True)
         data_frame.fillna(value=0, inplace=True)
@@ -59,10 +76,12 @@ def prepare_data(filename, print_corr=False):
     df = engineer_features(df)
     if print_corr:
         print("Pearson's correlations:")
-        display(df[df.columns[1:]].corr()['match'][:].sort_values(ascending=False))
+        display(df[df.columns[1:]].corr()['label'][:].sort_values(ascending=False))
 
-    X = df[['token_set_ratio', 'log_fuzz_score_numbers', 'partial_ratio', 'matching_numbers_log', 'matching_numbers',
-            'ratio', 'log_fuzz_score']].values
-    y = df['match'].values
+    X = df[['title_token_set_ratio', 'title_log_fuzz_score_numbers', 'title_partial_ratio',
+            'title_matching_numbers_log', 'title_matching_numbers', 'title_ratio', 'title_log_fuzz_score',
+            'brand_ratio', 'price_similarity', 'price_similarity_log']].values
+
+    y = df['label'].values
 
     return X, y
