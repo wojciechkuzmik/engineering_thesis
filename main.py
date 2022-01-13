@@ -1,5 +1,6 @@
 from get_data import get_data
-from machine_learning import test_models, supervised_machine_learning, unsupervised_machine_learning, tune_gbclassifier
+from machine_learning import test_models, supervised_machine_learning, unsupervised_machine_learning, tune_gbclassifier, \
+    show_data
 
 default_learning_data_f = "data/data.csv"
 default_web_scraping_data_f = "data/web_scraping_data.csv"
@@ -12,6 +13,7 @@ if __name__ == '__main__':
         3. supervised machine learning
         4. unsupervised machine learning
         5. tune GradientBoostClassifier
+        6. show data
         0. exit """)
         option = input("Enter an option (only number): ")
         if option == "1":
@@ -45,6 +47,11 @@ if __name__ == '__main__':
             if not filename:
                 filename = default_learning_data_f
             tune_gbclassifier(filename)
+        elif option == "6":
+            filename = input("filename with learning data (press enter to choose default filename): ")
+            if not filename:
+                filename = default_learning_data_f
+            show_data(filename)
         elif option == "0":
             break
         else:

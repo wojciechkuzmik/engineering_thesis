@@ -39,7 +39,7 @@ def test_models(filename):
         "RandomForestClassifier": RandomForestClassifier(),
         "GradientBoostingClassifier": GradientBoostingClassifier(),
         "Perceptron": Perceptron(),
-        "MLP": MLPClassifier()
+        "MLPClassifier": MLPClassifier()
     }
 
     df_results = pd.DataFrame(columns=['model', 'accuracy', 'precision',
@@ -71,7 +71,7 @@ def test_models(filename):
                }
         df_results = df_results.append(row, ignore_index=True)
 
-    print(df_results.head(11))
+    df_results.to_csv("results/test_models_results.csv")
 
 
 def tune_gbclassifier(filename):
@@ -215,10 +215,13 @@ def tune_gbclassifier(filename):
 def supervised_machine_learning(filename_learn, filename_test):
     X, y = prepare_data(filename_learn, print_corr=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=1, stratify=y)
-    model = GradientBoostingClassifier(learning_rate=0.5, n_estimators=300, max_depth=5, min_samples_split=0.01,
-                                       min_samples_leaf=0.01, max_features=4)
+    model=GradientBoostingClassifier(learning_rate=0.5, n_estimators=500, max_depth=5, min_samples_split=0.1,
+                                       min_samples_leaf=0.1, max_features=4)
+    model= GradientBoostingClassifier()
     model = model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
+    print("\nf1 score:")
+    print(f1_score(y_test, y_pred))
     print("\nroc_auc_score:")
     print(roc_auc_score(y_test, y_pred))
     print("\nClassification report for testing data:")
@@ -226,11 +229,11 @@ def supervised_machine_learning(filename_learn, filename_test):
 
     print("\n\nweb scraping data results:")
     web_scraping_data, _ = prepare_data(filename_test)
-    web_scraping_pred = model.predict_proba(web_scraping_data)[:, 1]
+    web_scraping_pred = model.predict(web_scraping_data)
     web_scraping_df = pd.read_csv(filename_test)
     web_scraping_df = web_scraping_df.drop(columns=["label"])
     web_scraping_df["pred"] = web_scraping_pred
-    print(web_scraping_df.to_string(index=False))
+    web_scraping_df.to_csv("results/supervised.csv")
 
 
 def unsupervised_machine_learning(filename_learn, filename_test):
@@ -251,5 +254,29 @@ def unsupervised_machine_learning(filename_learn, filename_test):
     web_scraping_pred = model.predict(web_scraping_data)
     web_scraping_df = pd.read_csv(filename_test)
     web_scraping_df = web_scraping_df.drop(columns=["label"])
-    web_scraping_df["pred"] = web_scraping_pred
-    print(web_scraping_df.to_string(index=False))
+    web_scraping_df["cluster"] = web_scraping_pred
+    web_scraping_df.to_csv("results/unsupervised.csv")
+
+
+def show_data(filename):
+    df = prepare_data(filename, return_as_df=True)
+    groups = df.groupby('label')
+    for name, group in groups:
+        plt.plot(group.title_ratio, group.price_similarity, marker='.', linestyle='', markersize=3, label=name)
+    plt.ylabel('atrybut title_ratio')
+    plt.xlabel('atrybut price_similarity')
+    plt.legend(title="Etykieta \ndopasowania")
+    plt.show()
+    for name, group in groups:
+        plt.plot(group.brand_token_set_ratio, group.price_similarity, marker='.', linestyle='', markersize=3, label=name)
+    plt.ylabel('atrybut brand_token_set_ratio')
+    plt.xlabel('atrybut price_similarity')
+    plt.legend(title="Etykieta \ndopasowania")
+    plt.show()
+    for name, group in groups:
+        plt.plot(group.brand_token_set_ratio, group.title_token_set_ratio, marker='.', linestyle='', markersize=3,
+                 label=name)
+    plt.ylabel('atrybut brand_token_set_ratio')
+    plt.xlabel('atrybut title_token_set_ratio')
+    plt.legend(title="Etykieta \ndopasowania")
+    plt.show()
